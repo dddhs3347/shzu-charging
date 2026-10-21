@@ -12,6 +12,15 @@
 | --- | --- |
 | ![历史](docs/images/history.jpg) | ![端口详情](docs/images/device-sheet.jpg) |
 
+## 下载
+
+| 你要什么 | 直接下 |
+| --- | --- |
+| **安卓 / 鸿蒙 App**（打开即用，不用配置） | [shzu-charger.apk](https://github.com/dddhs3347/shzu-charging/releases/latest/download/shzu-charger.apk) |
+| **电脑上自部署包**（Windows 双击就能跑） | [shzu-charging-selfhost.zip](https://github.com/dddhs3347/shzu-charging/releases/latest/download/shzu-charging-selfhost-v1.0.0.zip) |
+| **苹果 / 不想装东西** | 直接开 <https://shzucharge.xyz> |
+| 全部版本 | [Releases](https://github.com/dddhs3347/shzu-charging/releases) |
+
 ---
 
 ## 目录
