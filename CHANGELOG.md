@@ -52,11 +52,16 @@ App 前端版本号写在 `app/sw.js` 的 `VERSION`，自部署包按发布日�
 
 ### 校验
 
-| 文件 | 大小 | SHA-256 |
-| --- | --- | --- |
-| `shzu-charging-selfhost-v1.0.1.zip` | 829 134 字节（809.7 KB） | `2498ECCD28A7C808ECB47D919BC5CAD64C8E0A5D470BA33E36C38499E46B6CF7` |
-| `app/sw.js` 版本号 | `v1.4.52` | — |
-| 内嵌 APK 版本（如需自己编译） | `1.0.0`（versionCode 1） | — |
+| 项 | 值 |
+| --- | --- |
+| `app/sw.js` 里的前端版本号 | `v1.4.52` |
+| 包内文件数 | 34 个（不含 `relay/data/` 历史库） |
+| 压缩包 SHA-256 | 见 Release 页附件说明（文件无法写自己的哈希） |
+
+想自己核对：解开包后和 <https://github.com/dddhs3347/shzu-charging> 的 `main` 分支对照，
+`app/`、`relay/`、`shared/`、`sniffer/`、`start.py` 应完全一致（只少 `relay/tests/`）。
+
+Android App 的 APK 不在这份压缩包里，单独从 Release 页下载。
 
 ---
 
