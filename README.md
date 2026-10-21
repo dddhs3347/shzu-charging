@@ -6,11 +6,11 @@
 按 **中区 / 北区 / 东区 / 北苑新区 / 南区 / 将军山校区** 六个校区归类，精确到**每一个端口**：
 哪个空着、哪个在充电、哪个坏了，全部用图表 + 端口列表直接看。
 
-![首页总览](docs/images/home.png)
+![首页总览](docs/images/home.jpg)
 
 | 历史曲线 | 端口详情 |
 | --- | --- |
-| ![历史](docs/images/history.png) | ![端口详情](docs/images/device-sheet.png) |
+| ![历史](docs/images/history.jpg) | ![端口详情](docs/images/device-sheet.jpg) |
 
 ---
 
