@@ -16,10 +16,13 @@
 
 | 你要什么 | 直接下 |
 | --- | --- |
-| **安卓 / 鸿蒙 App**（打开即用，不用配置） | [shzu-charger.apk](https://github.com/dddhs3347/shzu-charging/releases/latest/download/shzu-charger.apk) |
-| **电脑上自部署包**（Windows 双击就能跑） | [shzu-charging-selfhost.zip](https://github.com/dddhs3347/shzu-charging/releases/latest/download/shzu-charging-selfhost-v1.0.0.zip) |
+| **安卓 / 鸿蒙 App**（打开即用，不用配置） | [shzu-charger.apk](https://github.com/dddhs3347/shzu-charging/raw/main/android/dist/shzu-charger.apk) |
+| **电脑上自部署包**（Windows 双击就能跑） | [下载仓库 ZIP](https://github.com/dddhs3347/shzu-charging/archive/refs/heads/main.zip) → 解压 → 双击 `start-windows.bat` |
 | **苹果 / 不想装东西** | 直接开 <https://shzucharge.xyz> |
-| 全部版本 | [Releases](https://github.com/dddhs3347/shzu-charging/releases) |
+| 历史版本 | [Releases](https://github.com/dddhs3347/shzu-charging/releases)（v1.0.0 初始版） |
+
+> 上面第一个链接就是仓库里的 `android/dist/shzu-charger.apk`，永远是最新构建；
+> Release 里的附件是 v1.0.0 首发版，功能一样，只是少了后续的稳定性修复。
 
 ---
 
@@ -49,7 +52,7 @@
 
    **<https://pan.quark.cn/s/bb6986b33540>**
 
-   文件名：`shzu-charger.apk`（约 274 KB，包名 `cn.edu.shzu.charger`）
+   文件名：`shzu-charger.apk`（约 346 KB，包名 `cn.edu.shzu.charger`）
 2. 手机上点开这个 apk 安装。系统提示「未知来源应用」时选「允许」即可
    （本 App 没上架应用商店，这是正常现象）。
 3. 打开 App，直接就是实时数据。首次打开会有两页使用说明，看完点「我已知晓」。
@@ -303,9 +306,11 @@ cd android
 不需要登录，也不涉及任何账号。两个接口本来就是小程序在不登录状态下调用的公开接口。
 但请**不要**把轮询间隔改得特别小（尤其铭创源），对方有风控，刷太猛会被临时封 IP。
 
-**Q：APK 为什么要从网盘下，不直接放 GitHub？**
-GitHub 对 apk 二进制不太友好（Release 之外的文件会拖慢仓库）。
-仓库里的 `android/dist/shzu-charger.apk` 是同步的副本，两个地方是同一个文件。
+**Q：APK 从哪儿下？为什么网盘和 GitHub 都有？**
+两个地方是同一个文件，随便下一个：
+- GitHub 直链（永远跟仓库同步）：`android/dist/shzu-charger.apk`
+- 夸克网盘（国内下载快）：<https://pan.quark.cn/s/bb6986b33540>
+- Release 附件：v1.0.0 首发版，功能一样，只是没有后续修复
 
 **Q：用手机流量打开，数据总是比校园网慢几分钟，是坏了吗？**
 不是。公开的网页版/APK 走的是 CDN + 云端缓存，而采集端每 2 分钟才发布一次，
