@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.python-version
+
+# 运行时数据（自部署时才会生成，不进仓库）
+relay/data/
+sniffer/out/
+*.db
+*.db-journal
+*.db-wal
+*.log
+
+# Android 构建产物（dist/ 里的成品 apk 例外，见下）
+android/build/
+android/webassets/
+android/.keystore-pass
+!android/dist/shzu-charger.apk
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# 前端本地产物（本项目零构建，一般不会有，保险起见）
+app/*.map
+node_modules/

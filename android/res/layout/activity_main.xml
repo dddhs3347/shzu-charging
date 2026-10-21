@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg"
+    android:fitsSystemWindows="true">
+
+    <!-- WebView 区域占满，出错时叠加错误/引导页 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <WebView
+            android:id="@+id/webview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ProgressBar
+            android:id="@+id/progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_gravity="top"
+            android:max="100"
+            android:progressTint="@color/accent"
+            android:progressBackgroundTint="@color/bg_card"
+            android:visibility="gone" />
+
+        <!-- 连接失败 / 离线兜底 -->
+        <ScrollView
+            android:id="@+id/errorPanel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/bg"
+            android:fillViewport="true"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingLeft="28dp"
+                android:paddingRight="28dp"
+                android:paddingTop="64dp"
+                android:paddingBottom="32dp">
+
+                <TextView
+                    android:id="@+id/errorTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/offline_title"
+                    android:textColor="@color/danger"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/errorBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:lineSpacingExtra="5dp"
+                    android:textColor="@color/text_dim"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="28dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnRetry"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/action_retry"
+                        android:backgroundTint="@color/accent"
+                        android:textColor="#FF0B1014" />
+
+                    <Button
+                        android:id="@+id/btnOffline"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/action_offline"
+                        android:backgroundTint="@color/bg_card"
+                        android:textColor="@color/text" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnChangeRelay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/action_change_relay"
+                    android:backgroundTint="@color/bg_card"
+                    android:textColor="@color/text"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/btnBundled"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/action_bundled"
+                    android:backgroundTint="@color/bg_card"
+                    android:textColor="@color/text_dim"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- 首次启动 / 修改地址的引导页 -->
+        <ScrollView
+            android:id="@+id/setupPanel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/bg"
+            android:fillViewport="true"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingLeft="26dp"
+                android:paddingRight="26dp"
+                android:paddingTop="56dp"
+                android:paddingBottom="32dp">
+
+                <ImageView
+                    android:layout_width="86dp"
+                    android:layout_height="86dp"
+                    android:layout_gravity="center_horizontal"
+                    android:src="@mipmap/ic_launcher"
+                    android:contentDescription="@string/app_name" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/app_name"
+                    android:textColor="@color/text"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/setup_title"
+                    android:textColor="@color/accent"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="26dp"
+                    android:text="@string/setup_hint"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/text_dim"
+                    android:textSize="13sp" />
+
+                <EditText
+                    android:id="@+id/editRelay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:hint="@string/setup_placeholder"
+                    android:inputType="textUri"
+                    android:maxLines="1"
+                    android:padding="14dp"
+                    android:background="@color/bg_card"
+                    android:textColor="@color/text"
+                    android:textColorHint="@color/text_dim"
+                    android:textSize="15sp"
+                    android:importantForAutofill="no" />
+
+                <TextView
+                    android:id="@+id/setupStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:minHeight="22dp"
+                    android:textColor="@color/text_dim"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnSave"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/setup_save"
+                    android:backgroundTint="@color/accent"
+                    android:textColor="#FF0B1014"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnTest"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/setup_test"
+                        android:backgroundTint="@color/bg_card"
+                        android:textColor="@color/text" />
+
+                    <Button
+                        android:id="@+id/btnSkip"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/setup_skip"
+                        android:backgroundTint="@color/bg_card"
+                        android:textColor="@color/text_dim" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="26dp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/text_dim"
+                    android:textSize="12sp"
+                    android:text="说明：本 App 只是前端外壳，数据全部来自你填写的 relay 地址。地址格式 http://IP:端口，端口默认 8080。手机需要和 relay 在同一个 Wi-Fi 下。装好后长按标题栏或按菜单键可以随时改地址。" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- 右上角设置入口：中继地址已内置，默认隐藏，只在代码里保留 id 兼容 -->
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="10dp"
+            android:background="@color/bg_card"
+            android:contentDescription="@string/action_change_relay"
+            android:padding="9dp"
+            android:src="@android:drawable/ic_menu_preferences"
+            android:tint="@color/text"
+            android:alpha="0.55"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</LinearLayout>

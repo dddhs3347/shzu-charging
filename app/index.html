@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>石大充电桩</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e131b">
+<meta name="description" content="石河子大学充电桩实时空闲查询：中区/北区/东区/北苑新区/南区/将军山校区">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="石大充电桩">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- 下拉刷新指示条 -->
+<div id="ptr" class="ptr" aria-hidden="true">
+  <div class="ptr-inner"><span class="ptr-spinner"></span><span class="ptr-text">下拉刷新</span></div>
+</div>
+
+<div class="app" id="app">
+
+  <!-- 顶部栏 -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-title">
+      <span class="brand-dot"></span>
+      <span class="brand-name">石大充电桩</span>
+      <span class="brand-sub" id="brandSub">石河子大学</span>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" class="icon-btn" id="btnRefresh" title="刷新" aria-label="刷新数据">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 6.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20 5v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <!-- 齿轮按钮已隐藏（同底部设置 tab）：默认走公共频道，无需用户配置。
+           排障时删掉 hidden 即可恢复设置入口。 -->
+      <button type="button" class="icon-btn" id="btnSettings" title="设置" aria-label="设置" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- 过期/错误提示条 -->
+  <div id="staleBanner" class="banner banner-warn" hidden>
+    <span class="banner-dot"></span>
+    <span class="banner-text" id="staleText">数据可能过期</span>
+  </div>
+  <div id="netBanner" class="banner banner-error" hidden>
+    <span class="banner-dot"></span>
+    <span class="banner-text" id="netText">网络请求失败</span>
+    <button type="button" class="banner-btn" id="btnBannerRetry">重试</button>
+  </div>
+  <div id="demoBanner" class="banner banner-info" hidden>
+    <span class="banner-text">演示模式：数据为合成样本，不是真实充电桩状态</span>
+  </div>
+  <!-- 风控惩罚期倒计时横幅：限流触发后两分钟内一直挂在顶部，
+       每秒更新剩余秒数，到 0 自动消失并恢复刷新（app.js renderRateLimitBanner） -->
+  <div id="rateLimitBanner" class="banner banner-error" hidden>
+    <span class="banner-dot"></span>
+    <span class="banner-text rate-limit-text">您已触发风控限制，请稍后再试</span>
+  </div>
+  <!-- 数据源被风控限流：数据源本身还在重试，但端口状态暂时冻结在某一刻 -->
+  <div id="sourceBanner" class="banner banner-warn" hidden>
+    <span class="banner-dot"></span>
+    <span class="banner-text" id="sourceText">数据源被限流，数据暂时停止刷新</span>
+    <span class="banner-text banner-sub" id="sourceSub"></span>
+  </div>
+
+  <main id="main" class="main" tabindex="-1">
+
+    <!-- ================= 总览 ================= -->
+    <section class="view" id="view-home" aria-label="总览">
+      <!-- 主指标是「空闲的端口」个数（大数字），空闲率以徽标形式放在采集时间旁边，
+           两者不抢位置：大数字回答「现在有几个能用」，徽标回答「整体成色如何」。
+           比例本身还由下面的四状态图例和六校区堆叠条表达。 -->
+      <div class="hero card card-hero" id="hero">
+        <div class="hero-left">
+          <div class="hero-label">全校空闲端口</div>
+          <div class="hero-num-row">
+            <span class="hero-free" id="heroFree">—</span>
+            <span class="hero-total" id="heroTotal">/ —</span>
+          </div>
+          <div class="hero-meta">
+            <span class="ratio-pill is-none" id="heroRatio">暂无数据</span>
+            <span class="hero-time" id="heroTime">等待数据</span>
+          </div>
+          <div class="hero-legend" id="heroLegend"></div>
+        </div>
+        <div class="hero-right" id="heroDonut"></div>
+      </div>
+
+      <!-- 数据源状态：relay 的 GET /api/sources。只在接得到 relay 时出现；
+           公共频道模式/旧 relay/接口 404 时整块隐藏（app.js 里 dom.sourcesBox.hidden = true）。
+           放在 hero 正下方而不是页面末尾：采集端是双源异速的（源 A 15 秒一轮、
+           源 B 2~3 分钟一轮），用户要判断「哪个源的数据是旧的」就得一眼看到，
+           埋在长列表后面等于没有。
+           注意 [hidden] 必须真的生效，靠 app.css 顶部的 [hidden]{display:none !important}。 -->
+      <div class="sources-box" id="sourcesBox" hidden>
+        <div class="section-head sources-head">
+          <h2 class="section-title">数据源</h2>
+          <span class="section-hint" id="sourcesHint"></span>
+        </div>
+        <div class="sources-list" id="sourcesList"></div>
+      </div>
+
+      <button type="button" class="cta-ports" id="btnOpenPorts">
+        <span class="cta-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="21" cy="6" r="1.6" fill="currentColor"/><circle cx="21" cy="12" r="1.6" fill="currentColor"/><circle cx="21" cy="18" r="1.6" fill="currentColor"/></svg>
+        </span>
+        <span class="cta-text">
+          <span class="cta-title">查看全部端口表</span>
+          <span class="cta-sub" id="ctaPortsSub">每个端口一行，实时状态</span>
+        </span>
+        <span class="cta-arrow" aria-hidden="true">›</span>
+      </button>
+
+      <div class="section-head" id="freeSectionHead">
+        <h2 class="section-title">空闲的端口</h2>
+        <span class="section-hint" id="freePortsHint"></span>
+      </div>
+      <div class="free-ports" id="freePorts"></div>
+      <button type="button" class="more-ports" id="freePortsMore" hidden></button>
+
+      <div class="section-head" id="homeSectionHead">
+        <h2 class="section-title">六校区</h2>
+        <span class="section-hint" id="campusCountHint"></span>
+      </div>
+
+      <div class="campus-grid" id="campusGrid">
+        <!-- 骨架屏 -->
+        <div class="skel-card skel" aria-hidden="true"></div>
+        <div class="skel-card skel" aria-hidden="true"></div>
+        <div class="skel-card skel" aria-hidden="true"></div>
+        <div class="skel-card skel" aria-hidden="true"></div>
+        <div class="skel-card skel" aria-hidden="true"></div>
+        <div class="skel-card skel" aria-hidden="true"></div>
+      </div>
+
+      <div class="footnote" id="homeFootnote"></div>
+    </section>
+
+    <!-- ================= 历史 ================= -->
+    <section class="view" id="view-history" aria-label="历史趋势" hidden>
+      <div class="section-head">
+        <h2 class="section-title">空闲率趋势</h2>
+        <span class="section-hint" id="historyHint"></span>
+      </div>
+
+      <div class="seg-group" id="rangeGroup" role="tablist" aria-label="时间范围">
+        <!-- JS 填充 -->
+      </div>
+
+      <div class="chip-scroll" id="campusChips" role="tablist" aria-label="校区筛选">
+        <!-- JS 填充 -->
+      </div>
+
+      <div class="card chart-card">
+        <div class="chart-head">
+          <div class="chart-current">
+            <span class="chart-cur-val" id="chartCurVal">—</span>
+            <span class="chart-cur-label" id="chartCurLabel" title="最近一次采集统计出的空闲率">当前空闲率</span>
+          </div>
+          <div class="chart-stats" id="chartStats"></div>
+        </div>
+        <div class="chart-box" id="chartBox">
+          <div class="skel-chart skel" aria-hidden="true"></div>
+        </div>
+        <div class="chart-foot" id="chartFoot"></div>
+      </div>
+
+      <div class="card fleet-card">
+        <h3 class="card-title">全校状态分布</h3>
+        <div id="fleetTotals"></div>
+      </div>
+    </section>
+
+    <!-- ================= 校区详情 ================= -->
+    <section class="view" id="view-campus" aria-label="校区详情" hidden>
+      <button type="button" class="back-btn" id="btnBackCampus">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>返回总览</span>
+      </button>
+      <div id="campusDetailHead"></div>
+      <div id="stationList" class="station-list"></div>
+    </section>
+
+    <!-- ================= 端口表（每个端口一行，不折叠不省略） ================= -->
+    <section class="view" id="view-ports" aria-label="端口表" hidden>
+      <button type="button" class="back-btn" id="btnBackPorts">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>返回总览</span>
+      </button>
+
+      <div class="ports-head">
+        <h2 class="section-title">全部端口</h2>
+        <span class="ports-summary" id="portsSummary">—</span>
+      </div>
+
+      <div class="seg-group" id="portStatusGroup" role="tablist" aria-label="状态筛选">
+        <!-- JS 填充 -->
+      </div>
+
+      <div class="chip-scroll" id="portCampusChips" role="tablist" aria-label="校区筛选">
+        <!-- JS 填充 -->
+      </div>
+
+      <!-- 数据源筛选：只有快照里的站点带 source_id 时才出现（多源 relay）。
+           公共频道 / 老 relay 的数据没有这个维度，整行隐藏。 -->
+      <div class="chip-scroll" id="portSourceChips" role="tablist" aria-label="数据源筛选" hidden>
+        <!-- JS 填充 -->
+      </div>
+
+      <div class="ports-legend" id="portsLegend"></div>
+
+      <div class="port-list" id="portList"></div>
+
+      <div class="state-block" id="portsEmpty" hidden>
+        <div class="state-icon">🔌</div>
+        <div class="state-title">没有符合条件的端口</div>
+        <div class="state-desc" id="portsEmptyDesc">换一个状态或校区筛选试试。</div>
+        <button type="button" class="btn btn-primary" id="btnPortsResetFilter">显示全部端口</button>
+      </div>
+    </section>
+
+    <!-- ================= 数据源详情（某数据源的分校区明细） ================= -->
+    <section class="view" id="view-source" aria-label="数据源详情" hidden>
+      <button type="button" class="back-btn" id="btnBackSource">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>返回总览</span>
+      </button>
+      <div id="sourceDetailHead"></div>
+      <div id="sourceCampusList" class="source-campus-list"></div>
+    </section>
+
+    <!-- ================= 设置 ================= -->
+    <section class="view" id="view-settings" aria-label="设置" hidden>
+      <div class="section-head">
+        <h2 class="section-title">设置</h2>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">公共频道（装上就能看）</h3>
+        <p class="card-desc">
+          平板把快照发布到<b>自己的域名</b>（<code>api.shzucharge.xyz</code>），任何人打开本 App
+          直接读这里，<b>不需要连你的局域网</b>；自己的域名不可达时才自动退到 ntfy.sh 兜底。
+          下面这一栏只在退到 ntfy 时用得上，<b>正常情况下不用改</b>。
+        </p>
+        <div class="field">
+          <input type="text" id="inputTopic" class="text-input" autocomplete="off"
+                 autocapitalize="off" spellcheck="false" placeholder="shzu-charger-xxxxxxxx">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="btnSaveTopic">保存</button>
+          <button type="button" class="btn" id="btnTestTopic">测试频道</button>
+          <button type="button" class="btn btn-ghost" id="btnResetTopic">恢复默认</button>
+        </div>
+        <div class="hint-line" id="topicStatus"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">数据源（relay 地址）</h3>
+        <p class="card-desc">
+          留空表示使用同源相对路径（relay 直接托管本页时）。也可以填平板地址，例如
+          <code>http://192.168.0.5:8080</code>。APK 壳可用 <code>?relay=</code> 参数或写入 localStorage 来注入。
+        </p>
+        <div class="field">
+          <input type="url" id="inputRelay" class="text-input" inputmode="url" autocomplete="off"
+                 autocapitalize="off" spellcheck="false" placeholder="http://192.168.0.5:8080（留空=同源）">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="btnSaveRelay">保存</button>
+          <button type="button" class="btn" id="btnTestRelay">测试连通性</button>
+          <button type="button" class="btn btn-ghost" id="btnResetRelay">恢复默认</button>
+        </div>
+        <div class="hint-line" id="relayStatus"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">自动刷新</h3>
+        <div class="seg-group" id="refreshGroup" role="tablist" aria-label="自动刷新间隔"></div>
+        <div class="hint-line" id="refreshHint"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">当前状态</h3>
+        <dl class="kv-list" id="settingsKv"></dl>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">维护</h3>
+        <div class="btn-row">
+          <button type="button" class="btn" id="btnClearCache">清除本地缓存</button>
+          <button type="button" class="btn" id="btnUpdateSW">检查更新</button>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="btnShowGuide">重新查看使用手册</button>
+        </div>
+        <div class="hint-line" id="maintHint"></div>
+      </div>
+
+      <div class="about">
+        <p>石大充电桩查询 v<span id="appVersion">1.0.0</span> · 纯静态 PWA</p>
+        <p>数据来源：微信小程序「石河子大学充电桩」→ 采集器 → relay</p>
+      </div>
+    </section>
+
+    <!-- 空状态 -->
+    <div class="state-block" id="emptyState" hidden>
+      <div class="state-icon">🔌</div>
+      <div class="state-title">暂无充电桩数据</div>
+      <div class="state-desc" id="emptyDesc">relay 还没有采集到数据，或指定的校区暂无站点。</div>
+      <button type="button" class="btn btn-primary" id="btnEmptyRetry">重新加载</button>
+    </div>
+
+    <!-- 错误状态 -->
+    <div class="state-block" id="errorState" hidden>
+      <div class="state-icon">⚠️</div>
+      <div class="state-title">加载失败</div>
+      <div class="state-desc" id="errorDesc"></div>
+      <button type="button" class="btn btn-primary" id="btnErrorRetry">重试</button>
+    </div>
+
+  </main>
+
+  <!-- 底部页签 -->
+  <nav class="tabbar" id="tabbar" aria-label="主导航">
+    <button type="button" class="tab is-active" data-tab="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <span>总览</span>
+    </button>
+    <button type="button" class="tab" data-tab="ports">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h13M4 12h13M4 18h13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="20.2" cy="6" r="1.7" fill="currentColor"/><circle cx="20.2" cy="12" r="1.7" fill="currentColor"/><circle cx="20.2" cy="18" r="1.7" fill="currentColor"/></svg>
+      <span>端口</span>
+    </button>
+    <button type="button" class="tab" data-tab="history">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 15l3.5-4.5 3 2.5L20 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>历史</span>
+    </button>
+    <!-- 设置页已隐藏：默认走公共频道，普通用户不需要配置任何东西。
+         保留节点与 tab 按钮但不显示，排查时把 hidden 去掉即可恢复。
+         底部三个 tab 均分宽度（.tabbar 只有 3 个可见项时靠 flex 自动撑开）。 -->
+    <button type="button" class="tab" data-tab="settings" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l-.3-2.5a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <span>设置</span>
+    </button>
+  </nav>
+
+  <!-- 底部抽屉：桩详情 -->
+  <div class="sheet-mask" id="sheetMask" hidden>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-grab"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title" id="sheetTitle">桩详情</h3>
+        <button type="button" class="icon-btn" id="btnSheetClose" aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body" id="sheetBody"></div>
+    </div>
+  </div>
+
+  <!-- 反馈提交确认（自定义弹窗，不用原生 confirm：老 WebView 的 confirm
+       会冻结渲染线程，且样式不可控） -->
+  <div class="confirm-mask" id="confirmMask" hidden>
+    <div class="confirm" id="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <h3 class="confirm-title" id="confirmTitle">确认提交</h3>
+      <p class="confirm-text" id="confirmText"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-ghost" id="btnConfirmCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 风控惩罚弹窗：用户要求「触发限流后弹窗提醒『您已触发风控限制，请两分钟后再试』，
+       关闭后不可使用刷新功能，停止下发数据两分钟，两分钟后恢复」。
+       遮罩不绑点击关闭：必须点「我知道了」才消失（否则用户以为已经解除）。 -->
+  <div class="confirm-mask" id="rateLimitMask" hidden>
+    <div class="confirm confirm-danger" role="dialog" aria-modal="true" aria-labelledby="rateLimitTitle">
+      <h3 class="confirm-title" id="rateLimitTitle">已触发风控限制</h3>
+      <p class="confirm-text" id="rateLimitText">您已触发风控限制，请两分钟后再试。</p>
+      <p class="confirm-sub" id="rateLimitSub">倒计时：120 秒</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-primary" id="btnRateLimitOk">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 首次使用手册：全屏遮挡，点遮罩不关，必须点按钮 -->
+  <div class="guide-mask" id="guideMask" role="dialog" aria-modal="true" aria-labelledby="guideTitle" hidden>
+    <div class="guide">
+      <div class="guide-head">
+        <span class="guide-step" id="guideStep">第 1 / 2 页</span>
+        <h2 class="guide-title" id="guideTitle">使用手册</h2>
+      </div>
+      <div class="guide-body">
+        <p class="guide-page is-active" data-page="1">由于铭创电子及成本原因，两个数据的刷新时间不同，敬请谅解。</p>
+        <p class="guide-page" data-page="2">如果充电桩数据不准确可以点击端口信息提交反馈，同一个端口每人只能反馈一次。请不要重复刷新：一分钟内请求超过二十次会触发风控限制，届时会停止下发数据两分钟，请耐心等待倒计时结束。</p>
+      </div>
+      <div class="guide-foot">
+        <button type="button" class="btn btn-wait" id="btnGuideWait" disabled>需要等待十秒后方可点击</button>
+        <button type="button" class="btn btn-primary" id="btnGuideNext">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 轻提示 -->
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+</div>
+
+<script src="config.js"></script>
+<script src="util.js"></script>
+<script src="charts.js"></script>
+<script src="inflate.js"></script>
+<script src="api.js"></script>
+<script src="publicfeed.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

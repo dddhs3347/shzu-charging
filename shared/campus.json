@@ -1,0 +1,54 @@
+{
+  "schema": "shzu.campus.v1",
+  "school": "石河子大学",
+  "campuses": [
+    {
+      "id": "zhongqu",
+      "name": "中区",
+      "order": 1,
+      "aliases": ["中区", "中校区", "中心区", "中 区", "zhongqu", "ZQ", "zhong qu"]
+    },
+    {
+      "id": "beiqu",
+      "name": "北区",
+      "order": 2,
+      "aliases": ["北区", "北校区", "北 区", "beiqu", "BQ", "bei qu"]
+    },
+    {
+      "id": "dongqu",
+      "name": "东区",
+      "order": 3,
+      "aliases": ["东区", "东校区", "东 区", "dongqu", "DQ", "dong qu"]
+    },
+    {
+      "id": "beiyuan",
+      "name": "北苑新区",
+      "order": 4,
+      "aliases": ["北苑新区", "北苑", "北苑区", "北苑新校区", "新北北区", "新北", "beiyuan", "BY", "bei yuan"]
+    },
+    {
+      "id": "nanqu",
+      "name": "南区",
+      "order": 5,
+      "aliases": ["南区", "南校区", "南 区", "nanqu", "NQ", "nan qu"]
+    },
+    {
+      "id": "jiangjunshan",
+      "name": "将军山校区",
+      "order": 6,
+      "aliases": ["将军山校区", "将军山", "南山新校区", "南山", "将军山校区 ", "jiangjunshan", "JJS"]
+    }
+  ],
+  "status_map": {
+    "free": ["free", "idle", "available", "vacant", "0", "1空闲", "空闲", "可用", "待机", "未使用", "可租", "未占用"],
+    "busy": ["busy", "charging", "occupied", "in_use", "2", "使用中", "占用", "充电中", "已占用", "进行中"],
+    "offline": ["offline", "fault", "error", "disabled", "maintenance", "-1", "离线", "故障", "维护", "停用", "不可用"],
+    "unknown": ["unknown", "unknown状态", "未知"]
+  },
+  "notes": [
+    "厂商数字状态码不稳定：有的 0=空闲/1=占用，有的 0=离线/1=空闲/2=占用。",
+    "真实映射必须由 sniffer 的 profiles/*.json 按厂商覆盖，此处仅为兜底。",
+    "campus.aliases 用于把抓包拿到的区域/场地名字自动归到六大校区，匹配时忽略空格/大小写/括号内容。",
+    "unknown 是独立一档：表示「取不到状态」（例如数据源被风控限流），既不是空闲也不是离线，统计时不计入 free_ratio 分母。"
+  ]
+}

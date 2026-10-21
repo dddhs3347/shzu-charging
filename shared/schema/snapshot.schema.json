@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "shzu.snapshot.v1",
+  "title": "Snapshot",
+  "type": "object",
+  "required": ["schema", "generated_at", "data_at", "stale", "totals", "campuses"],
+  "properties": {
+    "schema": { "const": "shzu.snapshot.v1" },
+    "generated_at": { "type": "string" },
+    "data_at": { "type": ["string", "null"] },
+    "stale": { "type": "boolean" },
+    "demo": { "type": "boolean" },
+    "source": { "type": "object" },
+    "sources": {
+      "type": "array",
+      "description": "各数据源的采集健康状态；throttled=true 表示该源被风控限流，端口数仍是上次的真实规模，只是状态标记 unknown。",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": ["string", "null"] },
+          "name": { "type": ["string", "null"] },
+          "host": { "type": ["string", "null"] },
+          "ok": { "type": "boolean" },
+          "throttled": { "type": "boolean" },
+          "blocked_since": { "type": ["string", "null"] },
+          "retry_after": { "type": ["string", "null"] },
+          "frozen_ports": { "type": ["number", "null"] },
+          "message": { "type": "string" },
+          "campuses": {
+            "type": "array",
+            "description": "该数据源自己的分校区明细（可选）。只含该源真的有站点的校区，按 order 升序；各校区 totals 之和等于该源的 totals。",
+            "items": {
+              "type": "object",
+              "required": ["id", "name", "order", "totals", "stations"],
+              "properties": {
+                "id": { "enum": ["zhongqu", "beiqu", "dongqu", "beiyuan", "nanqu", "jiangjunshan"] },
+                "name": { "type": "string" },
+                "order": { "type": "integer" },
+                "totals": { "$ref": "#/definitions/totals" },
+                "stations": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "source_warning": {
+      "type": "object",
+      "description": "存在被限流的数据源时给出可直接展示的提示文案与冻结时刻。",
+      "properties": {
+        "reason": { "type": "string" },
+        "text": { "type": "string" },
+        "sources": { "type": "array", "items": { "type": ["string", "null"] } },
+        "blocked_since": { "type": ["string", "null"] },
+        "retry_after": { "type": ["string", "null"] }
+      }
+    },
+    "totals": { "$ref": "#/definitions/totals" },
+    "campuses": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "$ref": "#/definitions/campus" }
+    }
+  },
+  "definitions": {
+    "totals": {
+      "type": "object",
+      "required": ["total", "free", "busy", "offline", "unknown", "free_ratio"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "free": { "type": "integer", "minimum": 0 },
+        "busy": { "type": "integer", "minimum": 0 },
+        "offline": { "type": "integer", "minimum": 0 },
+        "unknown": { "type": "integer", "minimum": 0 },
+        "free_ratio": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "campus": {
+      "type": "object",
+      "required": ["id", "name", "order", "totals", "stations"],
+      "properties": {
+        "id": { "enum": ["zhongqu", "beiqu", "dongqu", "beiyuan", "nanqu", "jiangjunshan"] },
+        "name": { "type": "string" },
+        "order": { "type": "integer" },
+        "totals": { "$ref": "#/definitions/totals" },
+        "stations": { "type": "array", "items": { "$ref": "#/definitions/station" } }
+      }
+    },
+    "station": {
+      "type": "object",
+      "required": ["id", "name", "campus_id", "totals", "devices"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "campus_id": { "type": "string" },
+        "address": { "type": ["string", "null"] },
+        "lat": { "type": ["number", "null"] },
+        "lng": { "type": ["number", "null"] },
+        "updated_at": { "type": ["string", "null"] },
+        "source_id": {
+          "type": ["string", "null"],
+          "description": "该站点由哪个数据源采集（可选，如 shzu / lvcc）。旧采集器的数据没有这个字段。"
+        },
+        "totals": { "$ref": "#/definitions/totals" },
+        "devices": { "type": "array", "items": { "$ref": "#/definitions/device" } }
+      }
+    },
+    "device": {
+      "type": "object",
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": ["string", "null"] },
+        "name": { "type": ["string", "null"] },
+        "status": { "enum": ["free", "busy", "offline", "unknown"] },
+        "power_w": { "type": ["number", "null"] },
+        "busy_since": { "type": ["string", "null"] },
+        "order_id": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

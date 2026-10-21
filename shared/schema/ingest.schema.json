@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "shzu.ingest.v1",
+  "title": "Ingest",
+  "type": "object",
+  "required": ["schema", "collected_at", "stations"],
+  "properties": {
+    "schema": { "const": "shzu.ingest.v1" },
+    "collected_at": { "type": "string" },
+    "collector": { "type": "string" },
+    "site": { "type": "string" },
+    "status_map": {
+      "type": "object",
+      "properties": {
+        "free": { "type": "array", "items": { "type": "string" } },
+        "busy": { "type": "array", "items": { "type": "string" } },
+        "offline": { "type": "array", "items": { "type": "string" } },
+        "unknown": {
+          "type": "array",
+          "description": "「取不到状态」的状态词。必须是独立一档，不能混进 free/busy/offline。",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "description": "各数据源的采集健康状态（可选）。throttled=true 表示该源这轮被风控限流，采集器已复用上次成功的设备清单并把所有端口标记为 UNKNOWN。",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "host": { "type": "string" },
+          "ok": { "type": "boolean" },
+          "throttled": { "type": "boolean" },
+          "blocked_since": { "type": ["string", "null"] },
+          "retry_after": { "type": ["string", "null"] },
+          "frozen_ports": { "type": ["number", "null"] },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "stations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["raw_id", "devices"],
+        "properties": {
+          "raw_id": { "type": "string" },
+          "raw_name": { "type": "string" },
+          "raw_area": { "type": ["string", "null"] },
+          "address": { "type": ["string", "null"] },
+          "lat": { "type": ["number", "null"] },
+          "lng": { "type": ["number", "null"] },
+          "devices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["raw_id", "raw_status"],
+              "properties": {
+                "raw_id": { "type": "string" },
+                "code": { "type": ["string", "null"] },
+                "name": { "type": ["string", "null"] },
+                "raw_status": { "type": "string" },
+                "power_w": { "type": ["number", "null"] }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">石大充电桩</string>
+    <string name="setup_title">连接中继服务</string>
+    <string name="setup_hint">请输入平板/电脑上 relay 服务的地址\n例如 http://192.168.0.100:8080</string>
+    <string name="setup_placeholder">http://192.168.0.100:8080</string>
+    <string name="setup_save">保存并连接</string>
+    <string name="setup_test">测试连接</string>
+    <string name="setup_skip">先用离线页</string>
+    <string name="action_change_relay">修改地址</string>
+    <string name="action_retry">重试</string>
+    <string name="action_offline">离线页</string>
+    <string name="action_reload">刷新</string>
+    <string name="action_exit">退出</string>
+    <string name="msg_press_again_exit">再按一次返回键退出</string>
+    <string name="msg_bad_url">地址格式不对，需要 http://IP:端口 形式</string>
+    <string name="msg_testing">正在测试…</string>
+    <string name="msg_test_ok">连接成功</string>
+    <string name="msg_test_fail">连接失败</string>
+    <string name="msg_no_bundled">这个安装包没有内置离线版 UI</string>
+    <string name="msg_relay_builtin">地址已内置，无需配置</string>
+    <string name="action_bundled">打开内置离线版</string>
+    <string name="offline_title">正在使用公共频道</string>
+    <string name="offline_body">数据走公共频道，稍等一下就会自己出来。\n\n局域网中继（%1$s）暂时连不上，不影响使用，App 会在后台自动重试。\n\n如果一直没数据，检查手机能不能上网。</string>
+</resources>

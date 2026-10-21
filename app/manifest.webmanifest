@@ -1,0 +1,56 @@
+{
+  "name": "石大充电桩查询",
+  "short_name": "石大充电桩",
+  "description": "石河子大学六校区（中区/北区/东区/北苑新区/南区/将军山校区）充电桩实时空闲查询与 24 小时空闲率趋势。",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0b0f15",
+  "theme_color": "#0e131b",
+  "categories": ["utilities", "navigation"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "历史趋势",
+      "short_name": "历史",
+      "url": "./index.html#history",
+      "description": "查看 24 小时空闲率趋势"
+    },
+    {
+      "name": "设置数据源",
+      "short_name": "设置",
+      "url": "./index.html#settings",
+      "description": "修改 relay 地址与刷新间隔"
+    }
+  ]
+}

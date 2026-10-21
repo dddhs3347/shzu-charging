@@ -1,0 +1,21 @@
+# 平板（Android/Termux）上运行的脚本必须是 LF，否则 bash 会报
+#   /path/x.sh: line N: $'\r': command not found
+# Windows 上 core.autocrlf=true 会把仓库里的 LF 在 checkout 时改成 CRLF，
+# 推过去就在平板上炸。这里显式钉死。
+*.sh            text eol=lf
+*.py            text eol=lf
+*.json          text eol=lf
+*.js            text eol=lf
+*.css           text eol=lf
+*.html          text eol=lf
+*.md            text eol=lf
+*.webmanifest   text eol=lf
+
+# 二进制：不要碰
+*.png           binary
+*.jpg           binary
+*.apk           binary
+*.jks           binary
+*.idsig         binary
+*.gz            binary
+*.db            binary
