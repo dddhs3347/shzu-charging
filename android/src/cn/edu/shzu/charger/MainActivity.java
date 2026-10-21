@@ -164,6 +164,13 @@ public class MainActivity extends Activity {
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         }
 
+        /* 打开 WebView 远程调试（chrome://inspect / adb forward 可用）。
+         * 2026-10-21 加：手机用流量时 App 不刷新、网页端却正常，只能靠
+         * DevTools 看 file:// 源里的 XHR 到底报什么错。生产包留着无妨 ——
+         * 它只监听本地 unix socket，需要 USB 调试 + 用户授权才能连。 */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
         webView.setWebViewClient(new ShellClient());
         webView.setWebChromeClient(new ShellChromeClient());
         webView.addJavascriptInterface(new ShellBridge(), "ShzuShell");
@@ -183,6 +190,18 @@ public class MainActivity extends Activity {
         @Override
         public void onReceivedTitle(WebView view, String title) {
             super.onReceivedTitle(view, title);
+        }
+
+        /* 把前端 console 打到 logcat：file:// 源里 XHR 被拦/CORS 失败不会在
+         * 界面上留明显痕迹（只有「数据可能过期」横幅），没有这行就抓不到。
+         * 用法：adb logcat -s ShzuCharger */
+        @Override
+        public boolean onConsoleMessage(android.webkit.ConsoleMessage msg) {
+            if (msg != null) {
+                Log.i(TAG, "console[" + msg.messageLevel() + "] " + msg.message()
+                        + " @" + msg.sourceId() + ":" + msg.lineNumber());
+            }
+            return true;
         }
     }
 

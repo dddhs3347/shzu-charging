@@ -517,8 +517,11 @@
     feedPref.relay = false;
     return api.snapshot().then(function (snap) {
       feedPref.relay = true;
+      relayQuietUntil = 0;
       return { snap: snap, source: snap.from_sw_cache ? 'sw-cache' : 'live' };
     }, function (err) {
+      // relay 挂了就静默一分钟，别让每轮刷新都白等一次（见 fetchSnapshotWithFallback）
+      relayQuietUntil = Date.now() + 60000;
       if (err && typeof err === 'object') { err._source = 'relay'; }
       throw err;
     });
@@ -542,8 +545,78 @@
     return proto === 'http:' || proto === 'https:';
   }
 
+  /* 手机流量（蜂窝网络）下局域网 relay 地址**一定**不可达，直接别试。
+   *
+   * 为什么必须显式判断，而不能只靠超时兜底（2026-10-21 实测的真 bug）：
+   *   APK 的内置页面是 file:// 源，MainActivity 会把 ?relay=http://192.168.x.x:8080
+   *   传进来 → preferRelay=true。手机用流量时这条请求会一直挂着：Chromium 在
+   *   「路由不可达」时有时既不触发 error 也不触发 timeout（连 SYN 都出不去），
+   *   于是 relayTask 永远 pending，feedTask（云端）根本没机会跑。而 state.loading
+   *   已被置 true，之后每 15 秒一次的自动刷新都在「if (state.loading) return」处
+   *   直接返回 —— 界面永久冻结在旧数据上。用户看到的就是「流量下停在十几分钟前，
+   *   切回校园网几分钟后自己好了」。
+   *
+   * 判据：navigator.connection.type === 'cellular'。老 WebView 没有这个 API
+   * （undefined）时保持原行为，由 loadSnapshot 里的 deadline 兜底。 */
+  function onCellular() {
+    try {
+      var c = (typeof navigator !== 'undefined') &&
+        (navigator.connection || navigator.mozConnection || navigator.webkitConnection);
+      return !!(c && c.type === 'cellular');
+    } catch (e) { return false; }
+  }
+
+  /* relay 失败后静默 60 秒：不让每一轮刷新都白等一次超时，也不刷一屏
+   * ERR_CONNECTION_TIMED_OUT 到 logcat。60 秒后允许再探一次 —— 用户可能刚
+   * 从流量切回校园网。 */
+  var relayQuietUntil = 0;
+
+  /* 刷新流程的硬截止时间。
+   *
+   * 为什么要这一层：relay 的 XHR 和云端的 fetch 各自都有 timeout，但 2026-10-21
+   * 在手机上实测到「既不 error 也不 timeout」的请求（蜂窝网络下到内网地址，
+   * 连 SYN 都发不出去，Chromium 的连接状态机就那么挂着）。只要有一条这样的
+   * promise 被 race 到，loadSnapshot 的 then/catch 都不会跑 → state.loading
+   * 永远是 true → 之后每 15 秒的自动刷新全部在开头空转，界面永久冻结。
+   * 上限取 45 秒：比「relay 4 秒 + 云端 15 秒 ×2 次重试 + 退避」的合法最慢路径
+   * （约 35 秒）还宽一点，只砍真正挂死的请求。 */
+  var SNAPSHOT_DEADLINE_MS = 45000;
+
+  function withDeadline(promise, ms, label) {
+    return new Promise(function (resolve, reject) {
+      var settled = false;
+      var timer = setTimeout(function () {
+        if (settled) { return; }
+        settled = true;
+        var err = new Error((label || '请求') + '超时（' +
+          Math.round(ms / 1000) + ' 秒没有响应，已放弃这次刷新）');
+        err.kind = 'timeout';
+        reject(err);
+      }, ms);
+      promise.then(function (v) {
+        if (settled) { return; }
+        settled = true;
+        clearTimeout(timer);
+        resolve(v);
+      }, function (e) {
+        if (settled) { return; }
+        settled = true;
+        clearTimeout(timer);
+        reject(e);
+      });
+    });
+  }
+
   function fetchSnapshotWithFallback() {
-    var preferRelay = !!SHZU.trimSlash(SHZU.relay) || isSameOriginBackedByRelay();
+    var relayUrl = SHZU.trimSlash(SHZU.relay);
+    var relayUsable = !!relayUrl && !onCellular() && Date.now() >= relayQuietUntil;
+    var sameOrigin = isSameOriginBackedByRelay();
+    /* relay 明确不可用（蜂窝 / 刚失败过 / 根本没配）时只走云端一条路：
+     * 做「二次尝试」只会把同一条必失败的路径再跑一遍，白白拖慢刷新。 */
+    if (!relayUsable && !sameOrigin) {
+      return feedTask();
+    }
+    var preferRelay = relayUsable || sameOrigin;
     var first = preferRelay ? relayTask : feedTask;
     var second = preferRelay ? feedTask : relayTask;
     return first().catch(function (e1) {
@@ -730,7 +803,8 @@
     document.body.classList.add('is-loading');
     if (!o.silent && !state.snapshot) { renderSkeletons(); }
 
-    return fetchSnapshotWithFallback().then(function (res) {
+    return withDeadline(fetchSnapshotWithFallback(), SNAPSHOT_DEADLINE_MS, '刷新')
+      .then(function (res) {
       var snap = res.snap;
       // 先存原始快照，再叠反馈层：反馈层每次都从原始数据重算，
       // 不可以在叠过的对象上再叠（raw_status 会被覆盖坏掉）。

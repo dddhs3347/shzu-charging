@@ -7,7 +7,7 @@
  *   3. Service Worker 缓存 / localStorage —— 离线兜底
  *
  * relay 地址解析优先级（高 → 低）：
- *   1. URL 查询参数 ?relay=http://192.168.0.5:8080
+ *   1. URL 查询参数 ?relay=http://192.168.1.5:8080
  *   2. localStorage["shzu.relay"]（APK 壳 / 设置页写入）
  *   3. 同源（相对路径，即 "" —— 由 relay 直接托管本目录时使用）
  * 解析结果写入 window.SHZU.relay（去掉末尾斜杠）。
@@ -181,7 +181,7 @@
     refreshSeconds: 15,     // 自动刷新间隔（可配）
     requestTimeoutMs: 9000, // 单请求超时（公共频道 / 历史曲线等「重」请求）
     /* relay（局域网）专用超时：比通用超时短得多。
-     * 为什么单独一条：APK 打开时先试局域网 relay（192.168.0.100:8080），
+     * 为什么单独一条：APK 打开时先试局域网 relay（192.168.1.119:8080），
      * 不在同一个 WiFi 里就是连不上。用 9 秒等一个必然失败的请求，用户开局
      * 要盯着骨架屏干等 9 秒才看到公共频道的数据。4 秒足够校园网内的 relay
      * 应答，超时立刻转公共频道。
@@ -207,7 +207,7 @@
       if (!m) { return ''; }
       var raw = decodeURIComponent(m[1]);
       if (!raw) { return ''; }
-      // 允许 ?relay=192.168.0.5:8080 这种省略协议头的写法
+      // 允许 ?relay=192.168.1.5:8080 这种省略协议头的写法
       if (!/^https?:\/\//i.test(raw)) { raw = 'http://' + raw; }
       return trimSlash(raw);
     } catch (e) { return ''; }
@@ -233,7 +233,7 @@
     var stored = trimSlash(lsGet(STORE_KEY.relay));
     /* localStorage 里的 relay 地址是**上一个人/上一次配置**留下的，
      * 在 APK 里它会永久存活并盖掉 MainActivity 的决定：
-     *   平板上配过一次 192.168.0.100:8080 → 别人把 APK 装到手机（走 5G，
+     *   平板上配过一次 192.168.1.119:8080 → 别人把 APK 装到手机（走 5G，
      *   根本不在那个局域网）→ 手机上启动时没有 ?relay= 参数，config.js 却读到
      *   localStorage 里那条 → app.js 的 preferRelay 判成 true → 先去连一个
      *   必然不可达的局域网地址，每轮白等一次超时，用户看到的是
