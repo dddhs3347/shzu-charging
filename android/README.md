@@ -223,7 +223,7 @@ python tools\fix_bom.py
 压缩方式/时间戳），再交给 zipalign。**顺序不能反**：先 zipalign 再塞 dex 会破坏 4 字节对齐，
 apksigner 也会拒绝。
 
-改代码后重建只要重跑 `build.bat`，约 15 秒。改图标跑 `python tools\make_icons.py`
+改代码后重建只要重跑 `build.bat`，约 15 秒。图标已经生成好放在 `res/` 里，**不需要重新生成**；真要改图标才用 `python tools\make_icons.py --pack <设计稿目录>`（需要 Pillow）
 （PIL 自绘，超采样 4x，输出 5 个密度的 `ic_launcher.png` / `ic_launcher_round.png`）。
 
 ---
@@ -326,7 +326,7 @@ android/
 ├─ tools/
 │  ├─ install_android_sdk.ps1   从零装 SDK（下载记录 + 可重跑）
 │  ├─ pack_apk.py               往 aapt2 产出的 apk 里注入 classes.dex
-│  ├─ make_icons.py             PIL 自绘图标
+│  ├─ make_icons.py             图标生成器（需设计稿 pack + Pillow）
 │  ├─ verify.bat                验证入口（补 BOM 后调 verify.ps1）
 │  ├─ verify.ps1                全量静态校验，报告写 dist\verify.txt
 │  ├─ fix_bom.py                给 .ps1 补 UTF-8 BOM（PS 5.1 必需，幂等）
