@@ -86,6 +86,23 @@ def wait_health(port, timeout=20.0):
     return False
 
 
+def ingest_counts(path):
+    """读采集器落盘的 ingest JSON，返回 (站点数, 端口数)；读不到返回 None。"""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:                                          # noqa: BLE001
+        return None
+    stations = data.get("stations") or []
+    devices = 0
+    for st in stations:
+        try:
+            devices += len(st.get("devices") or [])
+        except Exception:                                      # noqa: BLE001
+            continue
+    return len(stations), devices
+
+
 def collect_once(source, port, workers):
     """跑一轮采集。失败只记日志，不退出循环 —— 断网 30 秒不该让整个服务挂掉。"""
     out = os.path.join(OUT_DIR, "ingest_%s.json" % source)
@@ -99,7 +116,21 @@ def collect_once(source, port, workers):
         text = (p.stdout or b"").decode("utf-8", "replace").strip()
         if p.returncode == 0:
             tail = text.splitlines()[-1][:120] if text else "ok"
-            print("  [%s] 采集成功 %.1fs  %s" % (source, took, tail), flush=True)
+            got = ingest_counts(out)
+            if got is not None and got[1] == 0:
+                # 采集器本身没报错，但一条端口都没拿到：最常见的原因是这台电脑
+                # 不在校园网里（学校接口只对校内网开放），或者是接口临时抽风。
+                if source == "shzu":
+                    print("  [%s] 本次 0 个端口 —— 多半不在校园网内，"
+                          "或学校接口临时不可用（%.1fs）" % (source, took), flush=True)
+                else:
+                    print("  [%s] 本次 0 个端口 —— 可能被官方风控挡住了，"
+                          "隔几分钟会自动重试（%.1fs）" % (source, took), flush=True)
+            elif got is not None:
+                print("  [%s] 采集成功 %.1fs  %d 个站 / %d 个端口  %s"
+                      % (source, took, got[0], got[1], tail), flush=True)
+            else:
+                print("  [%s] 采集成功 %.1fs  %s" % (source, took, tail), flush=True)
         else:
             print("  [%s] 采集失败（退出码 %d，%.1fs）" % (source, p.returncode, took), flush=True)
             for line in (text or "").splitlines()[-3:]:

@@ -20,9 +20,11 @@
 | **电脑上自部署包**（Windows 双击就能跑） | 同一个 [Release](https://github.com/dddhs3347/shzu-charging/releases/latest) 里下 `shzu-charging-selfhost-*.zip` → 解压 → 双击 `start-windows.bat` |
 | **苹果 / 不想装东西** | 直接开 <https://shzucharge.xyz> |
 | 全部版本 | [Releases](https://github.com/dddhs3347/shzu-charging/releases) |
+| 每个版本改了什么 | [CHANGELOG.md](CHANGELOG.md) |
 
 > Release 附件由作者手动上传，永远是最新可用版；国内下载慢就用下面的夸克网盘。
 > 源码仓库里的 `android/dist/shzu-charger.apk` 是每次构建同步的副本，仅供编译核对。
+> 自部署包升级只需覆盖文件，`relay/data/` 里的历史数据不用删。
 
 ---
 
