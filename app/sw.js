@@ -14,7 +14,7 @@
  *   - 页面里点「检查更新」会调 reg.update()，SW 有更新立刻 skipWaiting + clients.claim
  */
 
-var VERSION = 'v1.4.52';
+var VERSION = 'v1.4.53';
 var SHELL_CACHE = 'shzu-shell-' + VERSION;
 var API_CACHE = 'shzu-api-' + VERSION;
 var API_MAX_AGE = 30 * 60 * 1000;   // API 缓存最多用 30 分钟，再旧就当没有
@@ -34,7 +34,8 @@ var SHELL_ASSETS = [
   './app.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/icon-maskable-512.png'
 ];
 
 /* 把 App Shell 清单逐个**串行**写进缓存（缺什么补什么）。

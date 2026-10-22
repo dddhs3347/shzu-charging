@@ -54,7 +54,7 @@
    - Release：<https://github.com/dddhs3347/shzu-charging/releases/latest>
    - 夸克网盘（国内快）：**<https://pan.quark.cn/s/bb6986b33540>**
 
-   文件名：`shzu-charger.apk`（约 346 KB，包名 `cn.edu.shzu.charger`）
+   文件名：`shzu-charger.apk`（约 386 KB，包名 `cn.edu.shzu.charger`）
 2. 手机上点开这个 apk 安装。系统提示「未知来源应用」时选「允许」即可
    （本 App 没上架应用商店，这是正常现象）。
 3. 打开 App，直接就是实时数据。首次打开会有两页使用说明，看完点「我已知晓」。
