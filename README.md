@@ -16,8 +16,8 @@
 
 | 你要什么 | 去哪下 |
 | --- | --- |
-| **安卓 / 鸿蒙 App**（打开即用，不用配置） | [最新 Release](https://github.com/dddhs3347/shzu-charging/releases/latest) → 下 `shzu-charger.apk` |
-| **电脑上自部署包**（Windows 双击就能跑） | 同一个 [Release](https://github.com/dddhs3347/shzu-charging/releases/latest) 里下 `shzu-charging-selfhost-*.zip` → 解压 → 双击 `start-windows.bat` |
+| **安卓 / 鸿蒙 App**（打开即用，不用配置） | [最新 Release](https://github.com/dddhs3347/shzu-charging/releases/latest) → 下 `shzu-charger*.apk`（当前 v1.0.3） |
+| **电脑上自部署包**（Windows 双击就能跑） | 同一个 [Release](https://github.com/dddhs3347/shzu-charging/releases/latest) 里下 `shzu-selfhost-*.zip`（旧版叫 `shzu-charging-selfhost-*.zip`）→ 解压 → 双击 `start-windows.bat` |
 | **苹果 / 不想装东西** | 直接开 <https://shzucharge.xyz> |
 | 全部版本 | [Releases](https://github.com/dddhs3347/shzu-charging/releases) |
 | 每个版本改了什么 | [CHANGELOG.md](CHANGELOG.md) |
@@ -54,7 +54,7 @@
    - Release：<https://github.com/dddhs3347/shzu-charging/releases/latest>
    - 夸克网盘（国内快）：**<https://pan.quark.cn/s/bb6986b33540>**
 
-   文件名：`shzu-charger.apk`（约 386 KB，包名 `cn.edu.shzu.charger`）
+   文件名：`shzu-charger-v<版本>.apk`（v1.0.3 约 390 KB，包名 `cn.edu.shzu.charger`）
 2. 手机上点开这个 apk 安装。系统提示「未知来源应用」时选「允许」即可
    （本 App 没上架应用商店，这是正常现象）。
 3. 打开 App，直接就是实时数据。首次打开会有两页使用说明，看完点「我已知晓」。
