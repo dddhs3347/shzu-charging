@@ -474,7 +474,7 @@
   var resolvedCloud = resolveCloud();
 
   global.SHZU = {
-    version: '1.0.0',
+    version: '1.0.3',
     storeKey: STORE_KEY,
     campuses: CAMPUSES,
     status: STATUS,

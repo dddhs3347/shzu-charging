@@ -328,6 +328,8 @@
 
   <!-- 底部页签 -->
   <nav class="tabbar" id="tabbar" aria-label="主导航">
+    <!-- 悬浮胶囊的选中滑块：位置/宽度由 app.js 的 syncTabBar() 驱动 -->
+    <span class="tab-glow" aria-hidden="true"></span>
     <button type="button" class="tab is-active" data-tab="home">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
       <span>总览</span>

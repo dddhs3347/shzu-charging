@@ -27,7 +27,9 @@
   --blue: #4f9cff;
   --radius: 16px;
   --radius-sm: 10px;
-  --tabbar-h: 62px;
+  --tabbar-h: 58px;           /* 悬浮胶囊本体高度（不含底部间距） */
+  --tab-gap: 12px;            /* 胶囊与屏幕底边的间距 */
+  --tab-side: 40px;           /* 胶囊左右各留出的呼吸位（100vw - 2*20px） */
   --topbar-h: 54px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -165,7 +167,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 /* ---------------- 主区域 ---------------- */
 .main {
   flex: 1 1 auto;
-  padding: 12px 12px calc(var(--tabbar-h) + var(--safe-bottom) + 22px);
+  padding: 12px 12px calc(var(--tabbar-h) + var(--safe-bottom) + var(--tab-gap) + 26px);
   outline: none;
 }
 .view[hidden] { display: none; }
@@ -1002,36 +1004,75 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
   display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* ---------------- 底部页签 ---------------- */
+/* ---------------- 底部页签（悬浮玻璃胶囊） ----------------
+ * 2026-10-23 用户要求：底栏从「贴着屏幕底边的整条」改成**悬浮**的胶囊，
+ * 视觉参考 HyperLight 那种 soft glass —— 磨砂玻璃 + 高光边 + 悬浮阴影，
+ * 选中项滑一个绿色玻璃滑块。滑块位置由 app.js 的 syncTabBar() 用
+ * --tab-count / --tab-index 两个 CSS 变量驱动（tab 数量按可见项算，
+ * 设置页那个 hidden 的按钮不会被算进去）。 */
 .tabbar {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + var(--tab-gap));
+  transform: translateX(-50%);
   z-index: 40;
   display: flex;
-  height: calc(var(--tabbar-h) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
-  background: rgba(13, 18, 25, .94);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border-top: 1px solid var(--line);
+  align-items: stretch;
+  width: min(360px, calc(100vw - var(--tab-side)));
+  height: var(--tabbar-h);
+  padding: 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(38, 46, 58, .78), rgba(18, 24, 32, .90));
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, .11);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, .55),
+    0 3px 10px rgba(0, 0, 0, .35),
+    inset 0 1px 0 rgba(255, 255, 255, .13),
+    inset 0 -1px 0 rgba(0, 0, 0, .40);
+  transition: box-shadow .3s var(--ease);
 }
+/* 选中滑块：宽度 = 一个 tab 的宽度，靠 translateX(100% * index) 平滑滑动 */
+.tab-glow {
+  position: absolute;
+  top: 6px; bottom: 6px; left: 6px;
+  width: calc((100% - 12px) / var(--tab-count, 3));
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(0, 255, 136, .22), rgba(0, 255, 136, .07));
+  border: 1px solid rgba(0, 255, 136, .30);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, .35),
+    0 0 16px rgba(0, 255, 136, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
+  transform: translateX(calc(var(--tab-index, 0) * 100%));
+  transition: transform .34s cubic-bezier(.22, .9, .28, 1);
+  pointer-events: none;
+}
+.tabbar[data-glow="off"] .tab-glow { opacity: 0; }
 @media (min-width: 561px) {
-  .tabbar { max-width: 560px; margin: 0 auto; left: 50%; transform: translateX(-50%); border-radius: 16px 16px 0 0; }
+  /* 平板/桌面：胶囊稍微宽一点，但仍是悬浮的 */
+  .tabbar { width: 380px; }
 }
 .tab {
+  position: relative;
+  z-index: 1;
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
+  border-radius: 999px;
   color: var(--text-3);
   font-size: 10.5px;
   font-weight: 600;
-  transition: color .16s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+  transition: color .18s var(--ease), transform .18s var(--ease);
 }
-.tab svg { width: 22px; height: 22px; }
+.tab svg { width: 20px; height: 20px; }
 .tab.is-active { color: var(--green); }
+.tab:active { transform: scale(.94); }
 
 /* ---------------- 抽屉 ---------------- */
 .sheet-mask {
@@ -1117,7 +1158,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 18px);
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--tab-gap) + 16px);
   transform: translateX(-50%) translateY(8px);
   z-index: 80;
   max-width: 84vw;

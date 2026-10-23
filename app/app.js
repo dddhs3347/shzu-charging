@@ -401,6 +401,27 @@
     return { view: 'home', campusId: null };
   }
 
+  /* 悬浮胶囊底栏的滑块位置：把「可见 tab 里有几个、当前是第几个」
+   * 写进 CSS 变量 --tab-count / --tab-index，CSS 里靠 translateX 滑动。
+   * 用 hidden 判断可见性 —— 设置页那个按钮保留了节点但 hidden，不能算进宽度。 */
+  function syncTabBar() {
+    var bar = q('tabbar');
+    if (!bar) { return; }
+    var tabs = U.$$('.tab', bar);
+    var idx = -1;
+    var count = 0;
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].hidden) { continue; }
+      if (tabs[i].classList.contains('is-active')) { idx = count; }
+      count += 1;
+    }
+    bar.style.setProperty('--tab-count', String(count || 1));
+    bar.style.setProperty('--tab-index', String(idx < 0 ? 0 : idx));
+    // 校区详情/源详情这类子页面没有对应 tab，滑块淡出，别假装停在哪一项上
+    if (idx < 0) { bar.setAttribute('data-glow', 'off'); }
+    else { bar.removeAttribute('data-glow'); }
+  }
+
   function navigate(view, campusId, opts) {
     var o = opts || {};
     if (!VIEW_IDS[view]) { view = 'home'; }
@@ -427,6 +448,7 @@
       tabs[i].classList.toggle('is-active', active);
       tabs[i].setAttribute('aria-selected', active ? 'true' : 'false');
     }
+    syncTabBar();
 
     if (!o.noHistory) {
       var h = hashFor(view, ctxId);
@@ -3389,10 +3411,11 @@
     U.$$('.tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
         var v = tab.getAttribute('data-tab');
-        if (state.view === v) {
-          if (v !== 'home') { navigate('home'); }
-          return;
-        }
+        // 已经在这一页：什么都不做。
+        // 2026-10-23 用户报的 bug —— 这里原来写的是 `if (v !== 'home') navigate('home')`，
+        // 于是在「端口」页再点一次「端口」会被弹回总览。总览以外的页签点第二下
+        // 应该是空操作；从校区/源详情这种子页面点「总览」仍然要回首页（state.view 不是 home）。
+        if (state.view === v) { return; }
         navigate(v);
       });
     });
