@@ -5,6 +5,29 @@ App 前端版本号写在 `app/sw.js` 的 `VERSION`，自部署包按发布日�
 
 ---
 
+## v1.0.4 — 2026-10-24
+
+### 改了什么
+
+**新增 NAS 部署方式（飞牛 fnOS / 群晖 / 威联通 / 绿联 / 任意 Linux）。**
+以前只能在 Windows/macOS/Linux 上跑 `start.py`（前台进程，关掉窗口就停），
+现在可以一句 `docker compose` 丢到 NAS 上 7×24 常驻，采集逻辑完全一样：
+
+- `docker-compose.nas.yml`（仓库根）+ `deploy/nas/`：Dockerfile、自包含守护脚本 `run.sh`、
+  systemd 单元、参数模板 `.env.nas.example`。
+- `run.sh` 一个进程管四件事：relay 常驻、源 A 每 15 秒采、源 B 每 5 分钟后台采、
+  发布独立定时器每 120 秒推云端；带 flock 单实例锁，避免两份进程互相覆盖数据。
+- `deploy/nas/README.md`：飞牛 fnOS 图形界面与命令行两条路径、iPad 远程操作、
+  从旧设备迁移 SQLite 历史、参数表与常见问题。
+- 顺手修了 `deploy/publish_loop.sh` 只认 `python` 的问题（Debian 系 / NAS 上只有 `python3`）。
+
+### 升级方式
+
+NAS 上：`git pull` → `docker compose -f docker-compose.nas.yml up -d --build`。
+电脑上照旧：解压新包覆盖，然后重启 `start.py`。
+
+---
+
 ## v1.0.3 — 2026-10-23
 
 ### 改了什么

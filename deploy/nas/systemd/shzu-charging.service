@@ -1,0 +1,38 @@
+[Unit]
+Description=石大充电桩 采集 + 云发布（relay 同进程组）
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 改成你实际的用户与路径（建议用普通用户，别用 root）
+User=shzu
+WorkingDirectory=/opt/shzu-charging
+Environment=TZ=Asia/Shanghai
+Environment=RELAY_PORT=8080
+Environment=RELAY_DATA_DIR=/opt/shzu-charging/relay/data
+Environment=LOG_DIR=/opt/shzu-charging/logs
+Environment=COLLECT_SOURCE=both
+Environment=SHZU_INTERVAL=15
+Environment=LVCC_INTERVAL=300
+Environment=SHZU_CLOUD=https://api.shzucharge.xyz
+Environment=SHZU_CLOUD_MIN_INTERVAL=120
+# 口令建议别写在这里，放到下面 EnvironmentFile 指向的 600 权限文件里
+EnvironmentFile=-/etc/shzu-charging.env
+ExecStart=/usr/bin/bash deploy/nas/run.sh
+Restart=always
+RestartSec=10
+# 给采集器留点余量：源 A 一轮并发 16 路，偶尔会吃点 CPU
+Nice=5
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target
+
+# 启用：
+#   sudo mkdir -p /etc && echo 'SHZU_CLOUD_TOKEN=你的口令' | sudo tee /etc/shzu-charging.env
+#   sudo chmod 600 /etc/shzu-charging.env
+#   sudo cp deploy/nas/systemd/shzu-charging.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now shzu-charging
+# 看日志：
+#   journalctl -u shzu-charging -f

@@ -27,3 +27,14 @@ Thumbs.db
 # 前端本地产物（本项目零构建，一般不会有，保险起见）
 app/*.map
 node_modules/
+
+# 自部署 / NAS 运行时产物（口令与数据不进 git）
+.env
+.env.nas
+logs/
+relay/data/
+deploy/nas/data/
+deploy/nas/logs/
+deploy/nas/sniffer-out/
+sniffer/out/
+sniffer/state/

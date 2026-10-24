@@ -193,6 +193,34 @@ Windows 上给 bat 传参：`start-windows.bat --port 9000`，或者在命令行
 - **Linux**：写成 systemd service 或 `nohup python3 start.py &`；
 - **macOS**：`launchd` 或 `nohup python3 start.py &`。
 
+### 8. 想丢在 NAS 上 7×24 跑？
+
+NAS（飞牛 fnOS、群晖、威联通、绿联…）最省事，一句 `docker compose` 的事，
+而且**采集逻辑和电脑上完全一样**，只是换了个「怎么开机自启」的外壳。
+
+```bash
+# 1. 把仓库放到 NAS 的某个数据盘
+ssh root@<NAS 的 IP>
+mkdir -p /vol1/docker && cd /vol1/docker
+git clone https://github.com/dddhs3347/shzu-charging.git
+cd shzu-charging
+
+# 2. 填口令（要用云端中转才需要；只是局域网自用可跳过）
+cp .env.nas.example .env.nas && vi .env.nas
+
+# 3. 起
+docker compose -f docker-compose.nas.yml up -d --build
+docker compose -f docker-compose.nas.yml logs -f
+```
+
+飞牛 fnOS 也可以全程在网页界面里做：**Docker → 项目 → 新建项目**，
+项目路径选仓库根，编排文件填 `docker-compose.nas.yml`，创建后在项目页看日志/重启。
+完整步骤（含 iPad 操作、参数表、迁移平板数据、常见问题）见
+[`deploy/nas/README.md`](deploy/nas/README.md)。
+
+三个节奏各自独立，别互相拖：源 A 每 15 秒采集一次、源 B 每 5 分钟一次（有风控）、
+发布独立定时器每 120 秒推一次快照到云端。
+
 ---
 
 ## 自己编译 APK

@@ -1,0 +1,47 @@
+# 石大充电桩 · NAS 采集端（飞牛 fnOS / 群晖 / 威联通通用）
+#
+# 这个文件放在**仓库根目录**，专为「NAS 的 Docker 图形界面只认根目录 compose」准备：
+#   fnOS  → Docker → 项目 → 新建 → 项目路径选仓库根 → 编排文件填 docker-compose.nas.yml
+#   群晖  → Container Manager → 项目 → 新增 → 路径选仓库根 → 使用已有的 docker-compose.yml
+# 命令行（任意 Linux）：
+#   cd shzu-charging
+#   cp .env.nas.example .env.nas    # 填口令
+#   docker compose -f docker-compose.nas.yml up -d --build
+#
+# 详细步骤见 deploy/nas/README.md
+name: shzu-charging
+
+services:
+  collector:
+    build:
+      context: .
+      dockerfile: deploy/nas/Dockerfile
+    image: shzu-charging-collector:latest
+    container_name: shzu-charging
+    restart: unless-stopped
+    # 口令放 .env.nas（已在 .gitignore 里，不会进 git）
+    env_file:
+      - .env.nas
+    environment:
+      TZ: Asia/Shanghai
+      RELAY_PORT: "8080"
+      RELAY_DATA_DIR: /app/relay/data
+      LOG_DIR: /app/logs
+      COLLECT_SOURCE: both          # shzu | lvcc | both
+      SHZU_INTERVAL: "15"           # 源 A（官方小程序）采集间隔
+      SHZU_WORKERS: "16"            # NAS 性能弱就降到 6
+      LVCC_INTERVAL: "300"          # 源 B（充充充/铭创），被风控，别调小
+      SHZU_CLOUD_MIN_INTERVAL: "120"  # 云发布间隔（秒）
+    ports:
+      # 需要手机在同一 Wi-Fi 直连 NAS 才保留；只推云端可以删掉这两行。
+      # 8080 被 NAS 自己占用时改成 "18080:8080"。
+      - "8080:8080"
+    volumes:
+      - ./deploy/nas/data:/app/relay/data          # SQLite 历史存档
+      - ./deploy/nas/logs:/app/logs                # relay + 采集/发布日志
+      - ./deploy/nas/sniffer-out:/app/sniffer/out  # 每轮 ingest 原始 JSON（可清）
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

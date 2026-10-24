@@ -1,0 +1,43 @@
+# 石大充电桩 · NAS 采集端（docker compose）
+#
+# 用法：
+#   1. cp .env.example .env   然后填 SHZU_CLOUD_TOKEN
+#   2. docker compose up -d --build
+#   3. docker compose logs -f    看到「发布循环已在后台启动」就好了
+#
+# 注意这个文件放在 <仓库>/deploy/nas/ 下，build 上下文往上两级（仓库根）。
+name: shzu-charging
+
+services:
+  collector:
+    build:
+      context: ../..
+      dockerfile: deploy/nas/Dockerfile
+    image: shzu-charging-collector:latest
+    container_name: shzu-charging
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: Asia/Shanghai
+      RELAY_PORT: "8080"
+      COLLECT_SOURCE: both      # shzu | lvcc | both
+      SHZU_INTERVAL: "15"       # 源 A（官方小程序）采集间隔
+      SHZU_WORKERS: "16"
+      LVCC_INTERVAL: "300"      # 源 B（充充充/铭创）采集间隔，被风控，别调小
+      SHZU_CLOUD_MIN_INTERVAL: "120"   # 云发布间隔（秒）
+      LOG_DIR: /app/logs
+    ports:
+      # 只想要「给自己域名供数据」、不需要局域网直连的话，这行可以整段删掉。
+      # 需要手机在同一 Wi-Fi 直接连 NAS 看数据的话，保留（改成 "18080:8080" 也行）。
+      - "8080:8080"
+    volumes:
+      - ./data:/app/relay/data          # SQLite 历史存档（别丢，App 的历史曲线靠它）
+      - ./logs:/app/logs                # relay 日志 + 采集/发布明细
+      - ./sniffer-out:/app/sniffer/out  # 每轮 ingest 的原始 JSON（排查用，可删）
+    logging:
+      # NAS 上无限增长的日志能把系统盘写满，这里限制每个文件 10MB、最多 3 个。
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
